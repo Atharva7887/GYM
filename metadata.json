@@ -1,0 +1,6 @@
+{
+  "name": "IRONSYS - Tactile Strength & Nutrition Tracker",
+  "description": "High-contrast, offline-first tactical strength training and nutrition tracker with plate calculator, active rest timer, barcode scanner, and deterministic insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

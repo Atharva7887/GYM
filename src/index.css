@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #131315;
+  --color-surface-dim: #131315;
+  --color-surface-bright: #39393b;
+  --color-surface-container-lowest: #0e0e10;
+  --color-surface-container-low: #1b1b1d;
+  --color-surface-container: #201f21;
+  --color-surface-container-high: #2a2a2c;
+  --color-surface-container-highest: #353437;
+  --color-on-surface: #e5e1e4;
+  --color-on-surface-variant: #bbcac0;
+  --color-outline: #85948b;
+  --color-outline-variant: #3c4a42;
+  --color-primary: #5af0b3;
+  --color-on-primary: #003825;
+  --color-primary-container: #34d399;
+  --color-on-primary-container: #00563b;
+  --color-secondary: #cebdff;
+  --color-secondary-container: #4f319c;
+  --color-on-secondary-container: #bea8ff;
+  --color-tertiary: #ffd16d;
+  --color-tertiary-container: #ecb210;
+  --color-tertiary-fixed-dim: #f9bd22;
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html, body {
+    background-color: #131315;
+    color: #e5e1e4;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Custom scrollbar hiding for app shell feel */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}
+
+@keyframes scanLine {
+  0% {
+    top: 6%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 92%;
+    opacity: 1;
+  }
+  100% {
+    top: 6%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scan-laser {
+  animation: scanLine 2.2s ease-in-out infinite;
+}
+
