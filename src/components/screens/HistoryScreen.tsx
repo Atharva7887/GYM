@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HistoryWorkoutItem } from '../../data/mockData';
+import { ExerciseRPEProgressionChart } from '../charts/ExerciseRPEProgressionChart';
 
 interface HistoryScreenProps {
   loggedWorkouts: HistoryWorkoutItem[];
@@ -271,6 +272,11 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
           <span className="material-symbols-outlined text-[14px]">verified_user</span>
           <span>Estimates for tracking only. Not medical advice.</span>
         </div>
+      </section>
+
+      {/* RPE Fatigue & Progression Chart Section (Powered by Recharts) */}
+      <section className="flex flex-col">
+        <ExerciseRPEProgressionChart />
       </section>
 
       {/* Progress Section: Core Telemetry Trends & Sparklines matching Image 4 & 10 */}

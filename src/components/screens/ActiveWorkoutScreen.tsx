@@ -213,6 +213,20 @@ export const ActiveWorkoutScreen: React.FC<ActiveWorkoutScreenProps> = ({
     onUpdateExercises(updated);
   };
 
+  const handleRpeChange = (exerciseId: string, setId: string, newRpe: number | null) => {
+    const updated = exercises.map((ex) => {
+      if (ex.id !== exerciseId) return ex;
+      return {
+        ...ex,
+        sets: ex.sets.map((s) => {
+          if (s.id !== setId) return s;
+          return { ...s, rpe: newRpe };
+        }),
+      };
+    });
+    onUpdateExercises(updated);
+  };
+
   const handleSkipRest = () => {
     setIsRestTimerActive(false);
     setRestSecondsRemaining(0);
@@ -404,20 +418,48 @@ export const ActiveWorkoutScreen: React.FC<ActiveWorkoutScreenProps> = ({
                       </span>
                     </button>
 
-                    {/* RPE Cell */}
-                    <button
-                      onClick={() =>
-                        openKeypad(exercise.id, set.id, setNum, 'rpe', set.rpe)
-                      }
-                      className="flex-1 mx-1.5 h-10 rounded-lg bg-[#201f21] hover:bg-[#2a2a2c] flex flex-col items-center justify-center cursor-pointer transition-colors"
-                    >
-                      <span className="text-[10px] uppercase font-semibold text-[#85948b] leading-none">
-                        rpe
-                      </span>
-                      <span className="text-[14px] font-bold text-[#bbcac0] tabular-nums font-mono leading-tight">
-                        {set.rpe !== null ? set.rpe : '—'}
-                      </span>
-                    </button>
+                    {/* RPE Cell: Interactive dropdown for completed work sets, or keypad trigger */}
+                    {set.completed && set.type === 'work' ? (
+                      <div className="flex-1 mx-1.5 h-10 rounded-lg bg-[#201f21] hover:bg-[#2a2a2c] flex flex-col items-center justify-center relative border border-[#5af0b3]/30 px-1">
+                        <span className="text-[9px] uppercase font-semibold text-[#5af0b3] leading-none">
+                          rpe
+                        </span>
+                        <select
+                          value={set.rpe !== null ? set.rpe : ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                            handleRpeChange(exercise.id, set.id, val);
+                          }}
+                          className="w-full bg-transparent text-[13px] font-bold text-[#e5e1e4] font-mono text-center appearance-none cursor-pointer focus:outline-none"
+                          title="Select Rate of Perceived Exertion (RPE)"
+                        >
+                          <option value="" className="bg-[#1b1b1d] text-[#85948b]">Select</option>
+                          <option value="6.0" className="bg-[#1b1b1d] text-[#e5e1e4]">6.0 (Light warmup)</option>
+                          <option value="6.5" className="bg-[#1b1b1d] text-[#e5e1e4]">6.5</option>
+                          <option value="7.0" className="bg-[#1b1b1d] text-[#e5e1e4]">7.0 (3 reps in tank)</option>
+                          <option value="7.5" className="bg-[#1b1b1d] text-[#e5e1e4]">7.5</option>
+                          <option value="8.0" className="bg-[#1b1b1d] text-[#e5e1e4]">8.0 (2 reps in tank)</option>
+                          <option value="8.5" className="bg-[#1b1b1d] text-[#ffd16d]">8.5 (1-2 reps in tank)</option>
+                          <option value="9.0" className="bg-[#1b1b1d] text-[#ffd16d]">9.0 (1 rep in tank)</option>
+                          <option value="9.5" className="bg-[#1b1b1d] text-[#ffb4ab]">9.5 (Maybe 1 rep)</option>
+                          <option value="10.0" className="bg-[#1b1b1d] text-[#ff5449]">10.0 (Absolute limit)</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          openKeypad(exercise.id, set.id, setNum, 'rpe', set.rpe)
+                        }
+                        className="flex-1 mx-1.5 h-10 rounded-lg bg-[#201f21] hover:bg-[#2a2a2c] flex flex-col items-center justify-center cursor-pointer transition-colors"
+                      >
+                        <span className="text-[10px] uppercase font-semibold text-[#85948b] leading-none">
+                          rpe
+                        </span>
+                        <span className="text-[14px] font-bold text-[#bbcac0] tabular-nums font-mono leading-tight">
+                          {set.rpe !== null ? set.rpe : '—'}
+                        </span>
+                      </button>
+                    )}
 
                     {/* Tactile Completion Checkbox */}
                     <button

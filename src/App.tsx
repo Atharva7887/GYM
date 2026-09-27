@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TabType, ScreenView, WorkoutExercise, RoutineTemplate, MealCategory, FoodItem, ExerciseDefinition } from './types';
+import { TabType, ScreenView, WorkoutExercise, SetEntry, RoutineTemplate, MealCategory, FoodItem, ExerciseDefinition } from './types';
 import {
   INITIAL_ROUTINES,
   INITIAL_ACTIVE_EXERCISES,
@@ -112,27 +112,129 @@ export default function App() {
     ? Math.max(activeWorkoutVolume, todayLoggedVolume)
     : todayLoggedVolume || 12480;
 
+  // Helper function to round weight to standard 2.5kg increments
+  const roundToGymIncrement = (val: number, minVal: number = 20): number => {
+    const rounded = Math.round(val / 2.5) * 2.5;
+    return Math.max(minVal, rounded);
+  };
+
+  // Generate standard progressive warmup routine (bar, 40%, 60%, 80%) based on target working set weight
+  const generateWarmupAndWorkingSets = (
+    workingWeight: number,
+    workingRepsStr: string,
+    numWorkingSets: number,
+    equipment: string,
+    baseId: string
+  ): SetEntry[] => {
+    const targetReps = parseInt(workingRepsStr) || 8;
+    const sets: SetEntry[] = [];
+    const isBarbell = equipment.toLowerCase().includes('barbell');
+    const barWeight = isBarbell ? 20 : Math.max(5, Math.round(workingWeight * 0.25));
+
+    // If working weight is heavy enough to warrant progressive warmups
+    if (workingWeight >= 40) {
+      // Warmup 1: Empty Olympic bar or baseline mobility (approx 10 reps)
+      sets.push({
+        id: `${baseId}-w1`,
+        type: 'warmup',
+        weightKg: barWeight,
+        reps: 10,
+        rpe: 6,
+        completed: false,
+      });
+
+      // Warmup 2: ~40% of target weight (approx 6-8 reps)
+      const w40 = roundToGymIncrement(workingWeight * 0.4, barWeight);
+      if (w40 > barWeight && w40 < workingWeight * 0.8) {
+        sets.push({
+          id: `${baseId}-w2`,
+          type: 'warmup',
+          weightKg: w40,
+          reps: 6,
+          rpe: 6.5,
+          completed: false,
+        });
+      }
+
+      // Warmup 3: ~60% of target weight (approx 4-5 reps)
+      const w60 = roundToGymIncrement(workingWeight * 0.6, barWeight);
+      if (w60 > (sets[sets.length - 1]?.weightKg || barWeight) && w60 < workingWeight * 0.85) {
+        sets.push({
+          id: `${baseId}-w3`,
+          type: 'warmup',
+          weightKg: w60,
+          reps: 4,
+          rpe: 7,
+          completed: false,
+        });
+      }
+
+      // Warmup 4: ~80% potentiation single/double if heavy (>= 80kg)
+      if (workingWeight >= 80) {
+        const w80 = roundToGymIncrement(workingWeight * 0.8, barWeight);
+        if (w80 > (sets[sets.length - 1]?.weightKg || barWeight) && w80 < workingWeight) {
+          sets.push({
+            id: `${baseId}-w4`,
+            type: 'warmup',
+            weightKg: w80,
+            reps: 2,
+            rpe: 7.5,
+            completed: false,
+          });
+        }
+      }
+    } else if (workingWeight > barWeight) {
+      // Light exercise warmup: single bar/light warmup set
+      sets.push({
+        id: `${baseId}-w1`,
+        type: 'warmup',
+        weightKg: barWeight,
+        reps: 8,
+        rpe: 6.5,
+        completed: false,
+      });
+    }
+
+    // Working sets
+    for (let i = 0; i < numWorkingSets; i++) {
+      sets.push({
+        id: `${baseId}-work-${i + 1}`,
+        type: 'work',
+        weightKg: workingWeight,
+        reps: targetReps,
+        rpe: i === numWorkingSets - 1 ? 8.5 : 8.0,
+        completed: false,
+      });
+    }
+
+    return sets;
+  };
+
   // Handlers for starting workout
   const handleStartWorkout = (routine?: RoutineTemplate) => {
     if (routine) {
-      const mappedExercises: WorkoutExercise[] = routine.exercises.map((re, idx) => ({
-        id: `we-${Date.now()}-${idx}`,
-        exerciseId: re.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        name: re.name,
-        muscles: re.muscles,
-        equipment: re.equipment,
-        target: `${re.weight} kg × ${re.reps} reps`,
-        est1RM: Math.round(re.weight * 1.2),
-        restTimeSeconds: 90,
-        sets: Array.from({ length: re.sets }).map((_, sIdx) => ({
-          id: `s-${Date.now()}-${idx}-${sIdx}`,
-          type: sIdx === 0 && re.weight > 60 ? 'warmup' : 'work',
-          weightKg: sIdx === 0 && re.weight > 60 ? Math.round(re.weight * 0.6) : re.weight,
-          reps: parseInt(re.reps) || 8,
-          rpe: sIdx === re.sets - 1 ? 8.5 : 8,
-          completed: false,
-        })),
-      }));
+      const mappedExercises: WorkoutExercise[] = routine.exercises.map((re, idx) => {
+        const baseId = `s-${Date.now()}-${idx}`;
+        const sets = generateWarmupAndWorkingSets(
+          re.weight,
+          re.reps,
+          re.sets,
+          re.equipment,
+          baseId
+        );
+
+        return {
+          id: `we-${Date.now()}-${idx}`,
+          exerciseId: re.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name: re.name,
+          muscles: re.muscles,
+          equipment: re.equipment,
+          target: `${re.weight} kg × ${re.reps} reps`,
+          est1RM: Math.round(re.weight * 1.2),
+          restTimeSeconds: 90,
+          sets,
+        };
+      });
       setActiveExercises(mappedExercises);
     }
     setActiveWorkoutRunning(true);
